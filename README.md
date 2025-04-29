@@ -6,7 +6,7 @@
 [Kamalika Chaudhuri](https://cseweb.ucsd.edu/~kamalika)
 
 
-This repo is an official implementation of the **WASP** ([arxiv:xxxx.xxxxx](https://arxiv.org/abs/xxxx.xxxxx)). 
+This repo is an official implementation of the **WASP** ([arxiv:2504.18575](https://arxiv.org/abs/2504.18575)). 
 
 Autonomous web navigation agents hold great potential for unlocking human productivity by automating mundane tasks on the internet. However, these agents can also be taken advantage of as new attack vectors for adversaries when deployed without proper mitigation. One emerging threat &mdash; prompt injection attacks, where the adversary embeds malicious instructions in the web environment that divert the agent to instead perform tasks for the adversary. To measure the extent of this risk, we construct this new benchmark that simulates real world attacks in a highly realistic, end-to-end executable web environment, without exposing the agent to real harm. 
 
