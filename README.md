@@ -41,7 +41,7 @@ pytest -x
 ## Running an end-to-end prompt injection tests.
 
 1. Setup the standalone environments.
-Please check out [this page](visualwebarena/environment_docker/README.md) for details. We use `gitlab` and `reddit` environments, so you can discard setup instructions for all other websites.
+Please check out [this page](visualwebarena/environment_docker/README.md) for details. IMPORTANT: Please follow instructions on that page as we modify several settings from the original (visual)webarena! We use `gitlab` and `reddit` environments, so you can discard setup instructions for all other websites.
 
 2. Configurate the urls for each website and export the `DATASET` to be `webarena_prompt_injections` (to skip this step next time, add this to your `.bashrc`):
 ```bash
