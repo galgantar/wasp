@@ -74,25 +74,25 @@ record_sets = [
                 ),
             ),
             mlc.Field(
-                id="jsonl/parameters",
-                name="parameters",
+                id="jsonl/parameters_str",
+                name="parameters_str",
                 description="parameters that are used to populate all other fields, it needs to be converted to dict type",
                 data_types=mlc.DataType.TEXT,
                 source=mlc.Source(
                     file_set="jsonl-files",
-                    extract=mlc.Extract(column="parameters"),
+                    extract=mlc.Extract(column="parameters_str"),
                 ),
             ),
-            # mlc.Field(
-            #     id="jsonl/eval",
-            #     name="eval",
-            #     description="eval -- evaluation workflow, needs to be converted into valid json dict.",
-            #     data_types=mlc.DataType.TEXT,
-            #     source=mlc.Source(
-            #         file_set="jsonl-files",
-            #         extract=mlc.Extract(column="eval"),
-            #     ),
-            # ),
+            mlc.Field(
+                id="jsonl/eval_str",
+                name="eval_str",
+                description="eval -- evaluation workflow, needs to be converted into valid json dict.",
+                data_types=mlc.DataType.TEXT,
+                source=mlc.Source(
+                    file_set="jsonl-files",
+                    extract=mlc.Extract(column="eval_str"),
+                ),
+            ),
         ],
     )
 ]
