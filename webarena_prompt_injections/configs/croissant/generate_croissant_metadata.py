@@ -29,17 +29,22 @@ record_sets = [
         # Each record has one or many fields...
         fields=[
             # Fields can be extracted from the FileObjects/FileSets.
-            # mlc.Field(
-            #     id="jsonl/task_id",
-            #     name="task_id",
-            #     description="task_id",
-            #     data_types=mlc.DataType.INT32,
-            #     source=mlc.Source(
-            #         file_set="jsonl-files",
-            #         # Extract the field from the column of a FileObject/FileSet:
-            #         extract=mlc.Extract(column="task_id"),
-            #     ),
-            # ),
+            mlc.Field(
+                id="jsonl/task",
+                name="task",
+                description=(
+                    "Type of task: prompt injection or utility."
+                ),
+                data_types=mlc.DataType.TEXT,
+                source=mlc.Source(
+                    file_set="jsonl-files",
+                    extract=mlc.Extract(
+                        file_property=mlc._src.structure_graph.nodes.source.FileProperty.filename
+                    ),
+                    # Extract the field from a regex on the filename:
+                    transforms=[mlc.Transform(regex="^(.*)\.jsonl$")],
+                ),
+            ),
             mlc.Field(
                 id="jsonl/free_form_name",
                 name="free_form_name",
@@ -135,5 +140,5 @@ records = dataset.records(record_set="jsonl")
 # print(len(records))
 for i, record in enumerate(records):
     print(record)
-    if i > 10:
+    if i > 22:
         break
