@@ -7,7 +7,7 @@ cd ../visualwebarena
 echo "Installing required packages for visualwebarena..."
 python3.10 -m venv venv
 source venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements_macos.txt
 playwright install
 pip install -e .
 deactivate
