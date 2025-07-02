@@ -9,11 +9,11 @@ from pathlib import Path
 from typing import Any, Optional, Tuple, Union
 from urllib.parse import urljoin
 
-import evaluate  # type: ignore[import]
+import evaluate
 import requests
 from beartype import beartype
 from beartype.door import is_bearable
-from nltk.tokenize import word_tokenize  # type: ignore
+from nltk.tokenize import word_tokenize
 from PIL import Image
 from playwright.sync_api import CDPSession, Page
 

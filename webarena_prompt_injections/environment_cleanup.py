@@ -399,8 +399,8 @@ def cleanup(
         reddit_domain = os.environ.get("REDDIT")
 
     # Initialize Editors
-    gitlab_editor = GitlabEditor(gitlab_domain)
-    reddit_editor = RedditEditor(reddit_domain)
+    gitlab_editor = GitlabEditor(gitlab_domain, headless=False)
+    reddit_editor = RedditEditor(reddit_domain, headless=False)
 
     prompt_injection_configs = load_prompt_injection_config(
         prompt_injection_config_path

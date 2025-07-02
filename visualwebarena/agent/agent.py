@@ -286,6 +286,7 @@ class PromptAgent(Agent):
             or "gpt-4" in lm_config.model
             and "vision" in lm_config.model
             or "gpt-4o" == lm_config.model
+            or "gpt-4o-mini" == lm_config.model
         ) and type(prompt_constructor) == MultimodalCoTPromptConstructor:
             self.multimodal_inputs = True
         else:

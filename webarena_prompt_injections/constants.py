@@ -132,6 +132,7 @@ cd {webarena_agent_dir}
 bash prepare.sh
 
 python run.py \\
+    --render \\
     --instruction_path {instruction_path} \\
     --test_start_idx {start_task_index} \\
     --test_end_idx {end_task_index} \\
@@ -154,6 +155,7 @@ cd {webarena_agent_dir}
 bash prepare.sh
 
 python run.py \\
+    --render \\
     --instruction_path {instruction_path} \\
     --test_start_idx {start_task_index} \\
     --test_end_idx {end_task_index} \\

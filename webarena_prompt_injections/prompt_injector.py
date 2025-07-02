@@ -699,8 +699,8 @@ def main(
             model = claude_agent_configs["model"]
             system_prompt = claude_agent_configs["system_prompt"]
 
-    gitlab_editor = GitlabEditor(gitlab_domain)
-    reddit_editor = RedditEditor(reddit_domain)
+    gitlab_editor = GitlabEditor(gitlab_domain, headless=False)
+    reddit_editor = RedditEditor(reddit_domain, headless=False)
     editor_list = [gitlab_editor, reddit_editor]
 
     web_arena_prompt_injector = WebArenaPromptInjector(

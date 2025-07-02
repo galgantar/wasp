@@ -94,7 +94,7 @@ docker run --name forum -p 9999:80 -e RATELIMIT_WHITELIST=0.0.0.0/0,::/0 -d post
 
 docker stop gitlab
 docker remove gitlab
-docker run --name gitlab -d -p 8023:8023 gitlab-populated-final-port8023 /opt/gitlab/embedded/bin/runsvdir-start
+docker run --name gitlab -d -p 8023:8023 --privileged gitlab-populated-final-port8023 /opt/gitlab/embedded/bin/runsvdir-start
 
 docker exec gitlab sed -i "s|^external_url.*|external_url 'http://<your-server-hostname>:8023'|" /etc/gitlab/gitlab.rb
 docker exec gitlab gitlab-ctl reconfigure
