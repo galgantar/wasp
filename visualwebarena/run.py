@@ -241,7 +241,7 @@ def early_stop(
     return False, ""
 
 
-def test(args: argparse.Namespace, config_file_list: list[str]) -> None:
+def test(args: argparse.Namespace, config_file_list: list[str], env=None, caption_image_fn=None) -> None:
     print(f"Going through these config files: {config_file_list}")
     scores = []
     max_steps = args.max_steps
@@ -251,17 +251,22 @@ def test(args: argparse.Namespace, config_file_list: list[str]) -> None:
         "repeating_action": args.repeating_action_failure_th,
     }
 
-    if args.observation_type in [
-        "accessibility_tree_with_captioner",
-        "image_som",
-    ]:
-        device = torch.device("cuda") if torch.cuda.is_available() else "cpu"
-        dtype = torch.float16 if torch.cuda.is_available() else torch.float32
-        caption_image_fn = image_utils.get_captioning_fn(
-            device, dtype, args.captioning_model
-        )
+    if caption_image_fn is None:
+        if args.observation_type in [
+            "accessibility_tree_with_captioner",
+            "image_som",
+        ]:
+            device = torch.device("cuda") if torch.cuda.is_available() else "cpu"
+            dtype = torch.float16 if torch.cuda.is_available() else torch.float32
+            caption_image_fn = image_utils.get_captioning_fn(
+                device, dtype, args.captioning_model
+            )
+            print("INFO: image fn is not None")
+        else:
+            print("INFO: image fn is None")
+            caption_image_fn = None
     else:
-        caption_image_fn = None
+        print("INFO: Using provided captioning function")
 
     # Load a (possibly different) captioning model for running VQA evals.
     if DATASET == "visualwebarena":
@@ -293,21 +298,27 @@ def test(args: argparse.Namespace, config_file_list: list[str]) -> None:
         ),
     )  # NOTE: captioning_fn here is used for captioning input images.
 
-    env = ScriptBrowserEnv(
-        headless=not args.render,
-        slow_mo=args.slow_mo,
-        observation_type=args.observation_type,
-        current_viewport_only=args.current_viewport_only,
-        viewport_size={
-            "width": args.viewport_width,
-            "height": args.viewport_height,
-        },
-        save_trace_enabled=args.save_trace_enabled,
-        sleep_after_execution=args.sleep_after_execution,
-        # NOTE: captioning_fn here is used for LLM + captioning baselines.
-        # This can be different from the captioning model used for evals.
-        captioning_fn=caption_image_fn,
-    )
+    if env is None:
+        env = ScriptBrowserEnv(
+            headless=not args.render,
+            slow_mo=args.slow_mo,
+            observation_type=args.observation_type,
+            current_viewport_only=args.current_viewport_only,
+            viewport_size={
+                "width": args.viewport_width,
+                "height": args.viewport_height,
+            },
+            save_trace_enabled=args.save_trace_enabled,
+            sleep_after_execution=args.sleep_after_execution,
+            # NOTE: captioning_fn here is used for LLM + captioning baselines.
+            # This can be different from the captioning model used for evals.
+            captioning_fn=caption_image_fn,
+        )
+    else:
+        print("INFO: Using provided environment")
+        # Set the captioning function on the provided environment
+        if caption_image_fn is not None:
+            env.captioning_fn = caption_image_fn
 
     for config_file in config_file_list:
         try:
@@ -370,9 +381,14 @@ def test(args: argparse.Namespace, config_file_list: list[str]) -> None:
 
             logger.info(f"[Config file]: {config_file}")
             logger.info(f"[Intent]: {intent}")
+            logger.info(f"[Task ID]: {task_id}")
+            logger.info(f"[Start URL]: {_c.get('start_url', 'N/A')}")
 
             agent.reset(config_file)
             trajectory: Trajectory = []
+            
+            # Ensure environment is properly reset for each test
+            print(f"INFO: Resetting environment for test {task_id}")
             obs, info = env.reset(options={"config_file": config_file})
             state_info: StateInfo = {"observation": obs, "info": info}
             trajectory.append(state_info)
@@ -507,10 +523,12 @@ def dump_config(args: argparse.Namespace) -> None:
             logger.info(f"Dump config to {config_file}")
 
 
-if __name__ == "__main__":
+def main(args=None, env=None, caption_image_fn=None):
     os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-    args = config()
+    if args is None:
+        args = config()
+
     args.sleep_after_execution = 2.5
     prepare(args)
 
@@ -530,4 +548,11 @@ if __name__ == "__main__":
     args.current_viewport_only = True
     dump_config(args)
 
-    test(args, test_file_list)
+    if env is None:
+        test(args, test_file_list, caption_image_fn=caption_image_fn)
+    else:
+        test(args, test_file_list, env, caption_image_fn)
+
+
+if __name__ == "__main__":
+    main()
