@@ -30,7 +30,7 @@ def run_eval(log_folder, task_folder, format):
     total_scores = 0.
     cnt_tasks = 0.
     MAX_NUM_RETRIES = 3
-    env = ScriptBrowserEnv(headless=True,
+    env = ScriptBrowserEnv(headless=False,
                            slow_mo=200,
                            observation_type="accessibility_tree",
                            current_viewport_only=True,
