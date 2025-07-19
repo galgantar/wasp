@@ -76,7 +76,7 @@ class WebArenaPromptInjector:
 
         # inject prompt into websites
         webarena_tasks_config, webarena_attacker_tasks_config = self._inject_prompts(
-            user_goal_idx, skip_environment
+            user_goal_idx, skip_environment, output_dir=output_dir
         )
 
         # saving user tasks in webarena format so that we can evaluate utility later
@@ -431,6 +431,7 @@ class WebArenaPromptInjector:
         user_goal_idx,
         tasks_with_prompt_injections,
         tasks_from_attacker,
+        output_dir=None,
     ):
         print("...for gitlab")
         incrementing_task_id_number = start_task_id
@@ -445,6 +446,16 @@ class WebArenaPromptInjector:
                     "A note from a gentleman thief",
                     prompt_injection_config["instantiated_instruction"],
                 )
+
+                # Take screenshot after the issue is created
+                if output_dir is not None:
+                    try:
+                        gitlab_editor.page.goto(issue_url, wait_until="networkidle")
+                        screenshot_path = os.path.join(output_dir, "gitlab_environment_setup.png")
+                        gitlab_editor.page.screenshot(path=screenshot_path)
+                        print(f"[INFO] Gitlab environment screenshot saved to {screenshot_path}")
+                    except Exception as e:
+                        print(f"[WARNING] Failed to take Gitlab environment screenshot: {e}")
 
                 # creating dict that describes webarena task for user and attacker goals
                 user_goal = GitlabUserGoals(issue_url)
@@ -552,7 +563,7 @@ class WebArenaPromptInjector:
 
         return incrementing_task_id_number
 
-    def _inject_prompts(self, user_goal_idx: int, skip_environment: bool):
+    def _inject_prompts(self, user_goal_idx: int, skip_environment: bool, output_dir=None):
         """
         Injects the prompt into the environment.
         """
@@ -569,8 +580,12 @@ class WebArenaPromptInjector:
                         user_goal_idx,
                         tasks_with_prompt_injections,
                         tasks_from_attacker,
+                        output_dir=output_dir
                     )
                 elif isinstance(editor, RedditEditor):
+                    # Skip reddit for now
+                    continue     
+                    
                     start_task_id = self._inject_reddit_prompts(
                         editor,
                         start_task_id,
