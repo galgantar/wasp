@@ -681,6 +681,12 @@ class WebArenaPromptInjector:
     default=False,
     help="Whether to do a dry run and skip injecting into the environment (for testing purposes). Default is False.",
 )
+@click.option(
+    "--headless",
+    is_flag=True,
+    default=False,
+    help="Whether to run the browser in headless mode. Default is False.",
+)
 def main(
     config,
     gitlab_domain,
@@ -692,6 +698,7 @@ def main(
     output_dir,
     output_format,
     skip_environment,
+    headless,
 ):
 
     if gitlab_domain == "none":  # try to get it from env var
@@ -714,8 +721,8 @@ def main(
             model = claude_agent_configs["model"]
             system_prompt = claude_agent_configs["system_prompt"]
 
-    gitlab_editor = GitlabEditor(gitlab_domain, headless=False)
-    reddit_editor = RedditEditor(reddit_domain, headless=False)
+    gitlab_editor = GitlabEditor(gitlab_domain, headless=headless)
+    reddit_editor = RedditEditor(reddit_domain, headless=headless)
     editor_list = [gitlab_editor, reddit_editor]
 
     web_arena_prompt_injector = WebArenaPromptInjector(

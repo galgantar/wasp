@@ -25,13 +25,24 @@ from evaluation_harness import evaluator_list
     type=str,
     default="webarena",
     help="the format of the logs: webarena (default), claude, gpt_web_tools")
-def run_eval(log_folder, task_folder, format):
-
+@click.option(
+    "--headless",
+    type=bool,
+    default=False,
+    help="whether to run the browser in headless mode. Default is False."
+)
+@click.option(
+    "--slow-mo",
+    type=int,
+    default=0,
+    help="the slow mo of the browser. Default is 0."
+)
+def run_eval(log_folder, task_folder, format, headless, slow_mo):
     total_scores = 0.
     cnt_tasks = 0.
     MAX_NUM_RETRIES = 3
-    env = ScriptBrowserEnv(headless=False,
-                           slow_mo=200,
+    env = ScriptBrowserEnv(headless=headless,
+                           slow_mo=slow_mo,
                            observation_type="accessibility_tree",
                            current_viewport_only=True,
                            viewport_size={"width": 1280, "height": 1720})

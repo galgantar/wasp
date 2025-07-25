@@ -70,7 +70,7 @@ def config() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Run end-to-end evaluation on the benchmark"
     )
-    parser.add_argument("--render", action="store_true", help="Render the browser")
+    parser.add_argument("--headless", action="store_true", help="Run the browser in headless mode")
 
     parser.add_argument(
         "--slow_mo",
@@ -300,7 +300,7 @@ def test(args: argparse.Namespace, config_file_list: list[str], env=None, captio
 
     if env is None:
         env = ScriptBrowserEnv(
-            headless=not args.render,
+            headless=args.headless,
             slow_mo=args.slow_mo,
             observation_type=args.observation_type,
             current_viewport_only=args.current_viewport_only,
