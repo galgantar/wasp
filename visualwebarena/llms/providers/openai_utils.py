@@ -15,7 +15,16 @@ from openai import AsyncAzureOpenAI, AzureOpenAI
 from openai import AsyncOpenAI, OpenAI
 
 
-if "AZURE_API_ENDPOINT" in os.environ and "AZURE_API_KEY" in os.environ:
+if "OPENROUTER_API_KEY" in os.environ and "OPENROUTER_API_BASE" in os.environ:
+    client = OpenAI(
+        api_key=os.environ["OPENROUTER_API_KEY"],
+        base_url=os.environ["OPENROUTER_API_BASE"]
+    )
+    aclient = AsyncOpenAI(
+        api_key=os.environ["OPENROUTER_API_KEY"],
+        base_url=os.environ["OPENROUTER_API_BASE"]
+    )
+elif "AZURE_API_ENDPOINT" in os.environ and "AZURE_API_KEY" in os.environ:
     api_version = "2024-10-21" if "AZURE_API_VERSION" not in os.environ else os.environ["AZURE_API_VERSION"]
     client = AzureOpenAI(
         azure_endpoint=os.environ["AZURE_API_ENDPOINT"],
