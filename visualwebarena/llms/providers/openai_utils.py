@@ -157,9 +157,14 @@ async def agenerate_from_openai_completion(
     """
     if "AZURE_API_KEY" not in os.environ:
         if "OPENAI_API_KEY" not in os.environ:
-            raise ValueError(
-                "either OPENAI_API_KEY or AZURE_API_KEY environment variable must be set when using OpenAI API."
-            )
+            if "OPENROUTER_API_KEY" not in os.environ:
+                raise ValueError(
+                    "either OPENAI_API_KEY, AZURE_API_KEY, or OPENROUTER_API_KEY environment variable must be set when using OpenAI API."
+                )
+            elif "OPENROUTER_API_BASE" not in os.environ:
+                raise ValueError(
+                    "OPENROUTER_API_BASE environment variable must be set when using OpenRouter API."
+                )
     elif "AZURE_API_ENDPOINT" not in os.environ:
         raise ValueError(
             "AZURE_API_ENDPOINT environment variable must be set when using AZURE OpenAI API."
@@ -193,9 +198,14 @@ def generate_from_openai_completion(
 ) -> str:
     if "AZURE_API_KEY" not in os.environ:
         if "OPENAI_API_KEY" not in os.environ:
-            raise ValueError(
-                "either OPENAI_API_KEY or AZURE_API_KEY environment variable must be set when using OpenAI API."
-            )
+            if "OPENROUTER_API_KEY" not in os.environ:
+                raise ValueError(
+                    "either OPENAI_API_KEY, AZURE_API_KEY, or OPENROUTER_API_KEY environment variable must be set when using OpenAI API."
+                )
+            elif "OPENROUTER_API_BASE" not in os.environ:
+                raise ValueError(
+                    "OPENROUTER_API_BASE environment variable must be set when using OpenRouter API."
+                )
     elif "AZURE_API_ENDPOINT" not in os.environ:
         raise ValueError(
             "AZURE_API_ENDPOINT environment variable must be set when using AZURE OpenAI API."
@@ -269,9 +279,14 @@ async def agenerate_from_openai_chat_completion(
     """
     if "AZURE_API_KEY" not in os.environ:
         if "OPENAI_API_KEY" not in os.environ:
-            raise ValueError(
-                "either OPENAI_API_KEY or AZURE_API_KEY environment variable must be set when using OpenAI API."
-            )
+            if "OPENROUTER_API_KEY" not in os.environ:
+                raise ValueError(
+                    "either OPENAI_API_KEY, AZURE_API_KEY, or OPENROUTER_API_KEY environment variable must be set when using OpenAI API."
+                )
+            elif "OPENROUTER_API_BASE" not in os.environ:
+                raise ValueError(
+                    "OPENROUTER_API_BASE environment variable must be set when using OpenRouter API."
+                )
     elif "AZURE_API_ENDPOINT" not in os.environ:
         raise ValueError(
             "AZURE_API_ENDPOINT environment variable must be set when using AZURE OpenAI API."
@@ -307,9 +322,14 @@ def generate_from_openai_chat_completion(
         assert "llama" in model.lower()
     if "AZURE_API_KEY" not in os.environ:
         if "OPENAI_API_KEY" not in os.environ:
-            raise ValueError(
-                "either OPENAI_API_KEY or AZURE_API_KEY environment variable must be set when using OpenAI API."
-            )
+            if "OPENROUTER_API_KEY" not in os.environ:
+                raise ValueError(
+                    "either OPENAI_API_KEY, AZURE_API_KEY, or OPENROUTER_API_KEY environment variable must be set when using OpenAI API."
+                )
+            elif "OPENROUTER_API_BASE" not in os.environ:
+                raise ValueError(
+                    "OPENROUTER_API_BASE environment variable must be set when using OpenRouter API."
+                )
     elif "AZURE_API_ENDPOINT" not in os.environ:
         raise ValueError(
             "AZURE_API_ENDPOINT environment variable must be set when using AZURE OpenAI API."
@@ -338,9 +358,14 @@ def fake_generate_from_openai_chat_completion(
 ) -> str:
     if "AZURE_API_KEY" not in os.environ:
         if "OPENAI_API_KEY" not in os.environ:
-            raise ValueError(
-                "either OPENAI_API_KEY or AZURE_API_KEY environment variable must be set when using OpenAI API."
-            )
+            if "OPENROUTER_API_KEY" not in os.environ:
+                raise ValueError(
+                    "either OPENAI_API_KEY, AZURE_API_KEY, or OPENROUTER_API_KEY environment variable must be set when using OpenAI API."
+                )
+            elif "OPENROUTER_API_BASE" not in os.environ:
+                raise ValueError(
+                    "OPENROUTER_API_BASE environment variable must be set when using OpenRouter API."
+                )
     elif "AZURE_API_ENDPOINT" not in os.environ:
         raise ValueError(
             "AZURE_API_ENDPOINT environment variable must be set when using AZURE OpenAI API."

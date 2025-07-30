@@ -27,7 +27,7 @@ from evaluation_harness import evaluator_list
     help="the format of the logs: webarena (default), claude, gpt_web_tools")
 @click.option(
     "--headless",
-    type=bool,
+    is_flag=True,
     default=False,
     help="whether to run the browser in headless mode. Default is False."
 )
