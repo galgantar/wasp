@@ -15,6 +15,14 @@ RUN apt-get update && \
     sudo \
     mutter \
     x11vnc \
+    # Graphics and PCI libraries
+    pciutils \
+    libpci3 \
+    libpci-dev \
+    mesa-utils \
+    libgl1-mesa-glx \
+    libgl1-mesa-dri \
+    libglu1-mesa \
     # Python/pyenv reqs
     build-essential \
     libssl-dev  \

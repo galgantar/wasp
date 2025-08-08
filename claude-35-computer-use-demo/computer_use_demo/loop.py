@@ -3,7 +3,9 @@ Agentic sampling loop that calls the Anthropic API and local implementation of a
 """
 
 import platform
+import time
 from collections.abc import Callable
+import sys
 from datetime import datetime
 from enum import StrEnum
 from typing import Any, cast
@@ -17,6 +19,12 @@ from anthropic import (
     APIResponseValidationError,
     APIStatusError,
 )
+# Ensure prints flush line-by-line even when not attached to a TTY or when piped
+try:
+    sys.stdout.reconfigure(line_buffering=True)
+    sys.stderr.reconfigure(line_buffering=True)
+except Exception:
+    pass
 from anthropic.types.beta import (
     BetaCacheControlEphemeralParam,
     BetaContentBlockParam,
@@ -85,10 +93,17 @@ async def sampling_loop(
     only_n_most_recent_images: int | None = None,
     max_tokens: int = 4096,
     max_actions: int = 100,
+    rate_limit_delay: float = 2.0,
 ):
     """
     Agentic sampling loop for the assistant/tool interaction of computer use.
     """
+    print(f"[{datetime.now().strftime('%H:%M:%S')}] 🚀 Starting Claude computer use session")
+    print(f"[{datetime.now().strftime('%H:%M:%S')}] Model: {model}")
+    print(f"[{datetime.now().strftime('%H:%M:%S')}] Provider: {provider}")
+    print(f"[{datetime.now().strftime('%H:%M:%S')}] Max actions: {max_actions}")
+    print(f"[{datetime.now().strftime('%H:%M:%S')}] Rate limit delay: {rate_limit_delay} seconds")
+    print(f"[{datetime.now().strftime('%H:%M:%S')}] Max tokens: {max_tokens}")
     tool_collection = ToolCollection(
         ComputerTool(),
         BashTool(),
@@ -99,7 +114,14 @@ async def sampling_loop(
         text=f"{SYSTEM_PROMPT}{' ' + system_prompt_suffix if system_prompt_suffix else ''}",
     )
 
-    for _ in range(max_actions):
+    # Add initial delay to ensure we don't hit rate limits on first call
+    if rate_limit_delay > 0:
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] Initial delay of {rate_limit_delay} seconds to avoid rate limiting...")
+        time.sleep(rate_limit_delay)
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] Initial delay completed. Starting main loop.")
+    
+    for action_num in range(max_actions):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] === Starting action {action_num + 1}/{max_actions} ===")
         enable_prompt_caching = False
         betas = [COMPUTER_USE_BETA_FLAG]
         image_truncation_threshold = 10
@@ -125,30 +147,61 @@ async def sampling_loop(
                 min_removal_threshold=image_truncation_threshold,
             )
 
-        # Call the API
+        # Add delay BEFORE API call to ensure rate limiting compliance
+        if rate_limit_delay > 0:
+            print(f"[{datetime.now().strftime('%H:%M:%S')}] Waiting {rate_limit_delay} seconds before API call to avoid rate limiting...")
+            time.sleep(rate_limit_delay)
+            print(f"[{datetime.now().strftime('%H:%M:%S')}] Pre-API delay completed. Making API call now...")
+        
+        # Call the API with retry logic for rate limiting
         # we use raw_response to provide debug information to streamlit. Your
         # implementation may be able call the SDK directly with:
         # `response = client.messages.create(...)` instead.
-        try:
-            raw_response = client.beta.messages.with_raw_response.create(
-                max_tokens=max_tokens,
-                messages=messages,
-                model=model,
-                system=[system],
-                tools=tool_collection.to_params(),
-                betas=betas,
-            )
-        except (APIStatusError, APIResponseValidationError) as e:
-            api_response_callback(e.request, e.response, e)
-            return messages
-        except APIError as e:
-            api_response_callback(e.request, e.body, e)
-            return messages
+        max_retries = 3
+        retry_delay = rate_limit_delay
+        
+        for attempt in range(max_retries):
+            try:
+                print(f"[{datetime.now().strftime('%H:%M:%S')}] Making API call attempt {attempt + 1}/{max_retries}...")
+                api_call_start = time.time()
+                raw_response = client.beta.messages.with_raw_response.create(
+                    max_tokens=max_tokens,
+                    messages=messages,
+                    model=model,
+                    system=[system],
+                    tools=tool_collection.to_params(),
+                    betas=betas,
+                )
+                api_call_duration = time.time() - api_call_start
+                print(f"[{datetime.now().strftime('%H:%M:%S')}] ✅ API call successful! Duration: {api_call_duration:.2f} seconds")
+                break  # Success, exit retry loop
+            except APIStatusError as e:
+                if e.status_code == 429:  # Rate limit error
+                    if attempt < max_retries - 1:
+                        retry_wait = retry_delay * (2 ** attempt)  # Exponential backoff
+                        print(f"[{datetime.now().strftime('%H:%M:%S')}] ❌ Rate limit hit (429)! Retrying in {retry_wait} seconds... (attempt {attempt + 1}/{max_retries})")
+                        print(f"[{datetime.now().strftime('%H:%M:%S')}] Rate limit error details: {e}")
+                        time.sleep(retry_wait)
+                        print(f"[{datetime.now().strftime('%H:%M:%S')}] Retry delay completed. Attempting API call again...")
+                        continue
+                # If not rate limit or max retries reached, handle as before
+                print(f"[{datetime.now().strftime('%H:%M:%S')}] ❌ API error (not rate limit): {e}")
+                api_response_callback(e.request, e.response, e)
+                return messages
+            except (APIResponseValidationError) as e:
+                print(f"[{datetime.now().strftime('%H:%M:%S')}] ❌ API validation error: {e}")
+                api_response_callback(e.request, e.response, e)
+                return messages
+            except APIError as e:
+                print(f"[{datetime.now().strftime('%H:%M:%S')}] ❌ General API error: {e}")
+                api_response_callback(e.request, e.body, e)
+                return messages
 
         api_response_callback(
             raw_response.http_response.request, raw_response.http_response, None
         )
 
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] Parsing API response...")
         response = raw_response.parse()
 
         response_params = _response_to_params(response)
@@ -158,26 +211,36 @@ async def sampling_loop(
                 "content": response_params,
             }
         )
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] Response parsed. Processing {len(response_params)} content blocks...")
 
         tool_result_content: list[BetaToolResultBlockParam] = []
+        tool_use_count = 0
         for content_block in response_params:
             output_callback(content_block)
             if content_block["type"] == "tool_use":
+                tool_use_count += 1
+                tool_name = content_block["name"]
+                print(f"[{datetime.now().strftime('%H:%M:%S')}] Executing tool {tool_use_count}: {tool_name}")
+                tool_start = time.time()
                 result = await tool_collection.run(
                     name=content_block["name"],
                     tool_input=cast(dict[str, Any], content_block["input"]),
                 )
+                tool_duration = time.time() - tool_start
+                print(f"[{datetime.now().strftime('%H:%M:%S')}] Tool {tool_name} completed in {tool_duration:.2f} seconds")
                 tool_result_content.append(
                     _make_api_tool_result(result, content_block["id"])
                 )
                 tool_output_callback(result, content_block["id"])
 
         if not tool_result_content:
+            print(f"[{datetime.now().strftime('%H:%M:%S')}] No tool use detected. Task completed.")
             return messages
 
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] Adding {len(tool_result_content)} tool results to conversation. Continuing to next iteration...")
         messages.append({"content": tool_result_content, "role": "user"})
         
-    print(f"Exhausted {max_actions} actions limit")
+    print(f"[{datetime.now().strftime('%H:%M:%S')}] ⚠️  Exhausted {max_actions} actions limit")
     return messages
 
 

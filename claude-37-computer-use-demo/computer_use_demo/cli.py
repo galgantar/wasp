@@ -5,7 +5,7 @@ import json
 import os
 
 import click
-from computer_use_demo.loop import sampling_loop
+from computer_use_demo.loop import sampling_loop, APIProvider
 from anthropic.types.beta import BetaContentBlockParam, BetaTextBlockParam
 from computer_use_demo.tools import ToolResult
 import httpx
@@ -88,7 +88,7 @@ def load_json_file(config_file_path: str):
 @click.option(
     "--model",
     default="arn:aws:bedrock:us-west-2:302263051492:inference-profile/us.anthropic.claude-3-7-sonnet-20250219-v1:0",
-    help="The model to run that will back the agent",
+    help="The model to run that will back the agent. Use 'claude-3-7-sonnet@20250219' for Vertex AI",
 )
 @click.option(
     "--system-prompt-suffix",
@@ -132,16 +132,34 @@ def main(
 
     api_requests_accumulator = APIRequestsLogger(conversation_log_file_path)
 
+    # Get API provider and key
+    provider_str = os.getenv("API_PROVIDER", "bedrock")
+    provider = APIProvider(provider_str)
+    
+    # API key is only required for Anthropic provider
+    api_key = ""
+    if provider == APIProvider.ANTHROPIC:
+        api_key = os.getenv("ANTHROPIC_API_KEY", "")
+        if not api_key:
+            raise ValueError("ANTHROPIC_API_KEY environment variable is required when using 'anthropic' provider")
+    elif provider == APIProvider.VERTEX:
+        # Vertex AI uses Google Cloud authentication (gcloud auth or service account)
+        # No API key needed - authentication is handled by google-auth library
+        print("Using Google Cloud Vertex AI - ensure you're authenticated with 'gcloud auth application-default login' or have GOOGLE_APPLICATION_CREDENTIALS set")
+    elif provider == APIProvider.BEDROCK:
+        # Bedrock uses AWS credentials
+        print("Using AWS Bedrock - ensure your AWS credentials are configured")
+
     asyncio.run(
         sampling_loop(
             system_prompt_suffix=system_prompt_suffix,
             model=model,
-            provider=os.getenv("API_PROVIDER", "bedrock"),
+            provider=provider,
             messages=initial_messages,
             output_callback=_output_callback,
             tool_output_callback=_tool_callback,
             api_response_callback=api_requests_accumulator.log_claude,
-            api_key="",
+            api_key=api_key,
             only_n_most_recent_images=only_n_most_recent_images,
             tool_version="computer_use_20250124",
             max_actions=max_actions,

@@ -99,7 +99,7 @@ class RedditUserGoals:
         ]
 
 
-CLAUDE_BASE_COMMAND = """
+CLAUDE_BASE_COMMAND_OLD = """
 # add 't' to -i (e.g. -it) to enable TTY, this is used for debugging each command interactively
 docker run \\
     -e API_PROVIDER=bedrock \\
@@ -115,6 +115,23 @@ docker run \\
     --user-prompt "Go to {start_url} and {user_goal}" \\
     --conversation-log-file-path "/home/computeruse/claude_computer_use_logs/claude_conversation_{index_of_conversation}.jsonl" \\
     --model "{model}" \\
+    --system-prompt-suffix "{system_prompt}" \\
+    --max-actions 75
+"""
+
+CLAUDE_BASE_COMMAND = """
+# add 't' to -i (e.g. -it) to enable TTY, this is used for debugging each command interactively
+docker run \\
+    -e API_PROVIDER=anthropic \\
+    -e ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY \\
+    -v {claude_agent_dir}/computer_use_demo:/home/computeruse/computer_use_demo/ \\
+    -v {conversation_log_folder_path}:/home/computeruse/claude_computer_use_logs \\
+    --rm \\
+    -i \\
+    computer-use-demo:local \\
+    --user-prompt "Go to {start_url} and {user_goal}" \\
+    --conversation-log-file-path "/home/computeruse/claude_computer_use_logs/claude_conversation_{index_of_conversation}.jsonl" \\
+    --model claude-3-5-sonnet-20241022 \\
     --system-prompt-suffix "{system_prompt}" \\
     --max-actions 75
 """
