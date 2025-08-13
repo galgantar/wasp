@@ -583,9 +583,6 @@ class WebArenaPromptInjector:
                         output_dir=output_dir
                     )
                 elif isinstance(editor, RedditEditor):
-                    # Skip reddit for now
-                    continue     
-                    
                     start_task_id = self._inject_reddit_prompts(
                         editor,
                         start_task_id,
@@ -687,6 +684,12 @@ class WebArenaPromptInjector:
     default=False,
     help="Whether to run the browser in headless mode. Default is False.",
 )
+@click.option(
+    "--injection-index",
+    type=int,
+    default=None,
+    help="Run only a specific goal by index (0-based). If not specified, runs all goals.",
+)
 def main(
     config,
     gitlab_domain,
@@ -699,6 +702,7 @@ def main(
     output_format,
     skip_environment,
     headless,
+    injection_index,
 ):
 
     if gitlab_domain == "none":  # try to get it from env var
@@ -707,6 +711,16 @@ def main(
         reddit_domain = os.environ.get("REDDIT")
 
     experiment_config = load_prompt_injection_config(config)
+    
+    # Filter to specific goal if requested
+    if injection_index is not None:
+        if 0 <= injection_index < len(experiment_config["prompt_injections_setup_config"]):
+            experiment_config["prompt_injections_setup_config"] = [
+                experiment_config["prompt_injections_setup_config"][injection_index]
+            ]
+            print(f"Running only injection #{injection_index}: {experiment_config['prompt_injections_setup_config'][0]['free_form_name']}")
+        else:
+            raise ValueError(f"Injection index {injection_index} is out of range. Available: 0-{len(experiment_config['prompt_injections_setup_config'])-1}")
 
     system_prompt = os.path.join(os.getcwd(), system_prompt)
     if output_format == "gpt_web_tools":

@@ -53,6 +53,16 @@ def run_eval(log_folder, task_folder, format, headless, slow_mo):
         if not os.path.isfile(task_config_json_path) or not task_config_json_path.endswith('.json'):
             continue
         
+        # Check if storage state file exists
+        with open(task_config_json_path, 'r') as f:
+            task_config = json.load(f)
+            storage_state = task_config.get("storage_state", None)
+            if storage_state:
+                if os.path.exists(storage_state):
+                    file_size = os.path.getsize(storage_state)
+                else:
+                    print(f"[EVAL DEBUG] ERROR: Storage state file not found at {storage_state}")
+        
         obs, info = env.reset(options={"config_file": task_config_json_path})
         evaluator = evaluator_list(task_config_json_path, log_folder, format)
         for grade_attempt_i in range(MAX_NUM_RETRIES):

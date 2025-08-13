@@ -142,9 +142,16 @@ def renew_comb(comb: list[str], auth_folder: str = "./.auth") -> None:
         page.get_by_test_id("password-field").fill(password)
         page.get_by_test_id("sign-in-button").click()
 
-    context.storage_state(path=f"{auth_folder}/{'.'.join(comb)}_state.json")
+    storage_path = f"{auth_folder}/{'.'.join(comb)}_state.json"
+    context.storage_state(path=storage_path)
+    
     # verify the json file is saved
-    browser.new_context(storage_state=f"{auth_folder}/{'.'.join(comb)}_state.json")
+    if os.path.exists(storage_path):
+        file_size = os.path.getsize(storage_path)
+    else:
+        print(f"[AUTH DEBUG] ERROR: Storage state file not found at {storage_path}")
+    
+    browser.new_context(storage_state=storage_path)
 
     context_manager.__exit__()
 

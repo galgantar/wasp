@@ -176,6 +176,16 @@ class ScriptBrowserEnv(Env[dict[str, Observation], Action]):
         storage_state = instance_config.get("storage_state", None)
         start_url = instance_config.get("start_url", None)
         geolocation = instance_config.get("geolocation", None)
+        
+        # Debug storage state loading
+        if storage_state:
+            if os.path.exists(storage_state):
+                file_size = os.path.getsize(storage_state)
+            else:
+                print(f"[BROWSER DEBUG] ERROR: Storage state file not found at {storage_state}")
+                print(f"[BROWSER DEBUG] Current working directory: {os.getcwd()}")
+        else:
+            print(f"[BROWSER DEBUG] No storage_state specified")
 
         # Use custom viewport size if specified in the config, otherwise use the default.
         viewport_size = self.viewport_size.copy()
@@ -203,6 +213,9 @@ class ScriptBrowserEnv(Env[dict[str, Observation], Action]):
                     client.send("Accessibility.enable")
                     client.detach()
                 page.goto(url)
+                # Check if we're on a login page
+                if "sign_in" in page.url or "login" in page.url:
+                    print(f"[BROWSER DEBUG] WARNING: Still on login page after navigation!")
             # set the first page as the current page
             self.page = self.context.pages[0]
             self.page.bring_to_front()
